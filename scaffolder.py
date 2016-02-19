@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from yaml import load as yaml_load
-import xml_elements
+import xml_generator
 
 
 def parse_yaml(filepath):
@@ -22,8 +22,8 @@ def yaml_children(parent):
 
 def generate_xml(file_path, yaml_output):
     with open(file_path, "w") as new_file:
-        new_file.write(xml_elements.xml_header)
-        for tag in xml_elements.map_tags(yaml_children(yaml_parents(yaml_output))):
+        new_file.write(xml_generator.xml_header)
+        for tag in xml_generator.map_tags(yaml_children(yaml_parents(yaml_output))):
             new_file.write(tag + "\n")
 
 
