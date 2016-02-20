@@ -4,27 +4,42 @@ from yaml import load as yaml_load
 import xml_generator
 
 
-def parse_yaml(filepath):
-    with open(filepath, "r") as stream:
+def parse_yaml(file_path):
+    with open(file_path, "r") as stream:
         stream = yaml_load(stream)
         return stream
 
 
-def yaml_parents(output):
-    for parent in output:
-        yield output[parent]
+def traverse_tree(output):
+    if isinstance(output, list):
+        for element_list in output:
+            for element in traverse_tree(element_list):
+                yield element
 
-
-def yaml_children(parent):
-    for child in iter(parent):
-        yield child
+    elif isinstance(output, dict):
+        for key in output:
+            for value in output[key]:
+                yield value
 
 
 def generate_xml(file_path, yaml_output):
     with open(file_path, "w") as new_file:
         new_file.write(xml_generator.xml_header)
-        for tag in xml_generator.map_tags(yaml_children(yaml_parents(yaml_output))):
-            new_file.write(tag + "\n")
+
+        yaml_activity = yaml_output.get('activity')
+
+        print("ORIGINAL OUTPUT\n----\n{}\n----\n".format(yaml_activity))
+
+        # root element
+        for tag in xml_generator.generate_tag(next(iter(yaml_activity[0]))):
+            new_file.write(tag)
+        # new_file.write(xml_generator.map_tags(next(iter(yaml_activity[0]))))
+
+        for element in traverse_tree(yaml_activity):
+            for tag in xml_generator.generate_tag(element):
+                new_file.write(tag)
+
+    print("\nYour file is ready at {}!".format(file_path))
 
 
 def main(file_path):
