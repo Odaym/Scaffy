@@ -1,25 +1,37 @@
 #!/usr/bin/env python3
 
-from yaml import load as yaml_load
+from yaml import safe_load as yaml_safe_load
 import xml_generator
 
 
 def parse_yaml(file_path):
     with open(file_path, "r") as stream:
-        stream = yaml_load(stream)
+        stream = yaml_safe_load(stream)
         return stream
 
 
-def traverse_tree(output):
+def traverse(output, file):
     if isinstance(output, list):
-        for element_list in output:
-            for element in traverse_tree(element_list):
-                yield element
-
+        for item in output:
+            traverse(item, file)
     elif isinstance(output, dict):
-        for key in output:
-            for value in output[key]:
-                yield value
+        for key, value in output.items():
+            if isinstance(value, dict):
+                # element with attrs
+                print("{} with {}".format(key, value))
+                for tag in xml_generator.map_tags(key, []):
+                    file.write(tag)
+            elif isinstance(value, list):
+                # another layout
+                print("root : {}".format(key))
+                for tag in xml_generator.map_tags(key, []):
+                    file.write(tag)
+
+            traverse(output[key], file)
+    elif isinstance(output, str) and output in xml_generator.tagNames:
+        # normal element
+        for tag in xml_generator.map_tags(output, []):
+            file.write(tag)
 
 
 def generate_xml(file_path, yaml_output):
@@ -28,16 +40,7 @@ def generate_xml(file_path, yaml_output):
 
         yaml_activity = yaml_output.get('activity')
 
-        print("ORIGINAL OUTPUT\n----\n{}\n----\n".format(yaml_activity))
-
-        # root element
-        for tag in xml_generator.generate_tag(next(iter(yaml_activity[0]))):
-            new_file.write(tag)
-        # new_file.write(xml_generator.map_tags(next(iter(yaml_activity[0]))))
-
-        for element in traverse_tree(yaml_activity):
-            for tag in xml_generator.generate_tag(element):
-                new_file.write(tag)
+        traverse(yaml_activity, new_file)
 
     print("\nYour file is ready at {}!".format(file_path))
 
@@ -45,8 +48,8 @@ def generate_xml(file_path, yaml_output):
 def main(file_path):
     yaml_output = parse_yaml(file_path)
 
-    generate_xml("/Users/oday/Desktop/newfile.xml", yaml_output)
+    generate_xml("newfile.xml", yaml_output)
 
 
 if __name__ == '__main__':
-    main("/Users/oday/Desktop/stream.yaml")
+    main("stream.yaml")
