@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 from yaml import safe_load as yaml_safe_load
+from lxml import etree as ET
 import xml_generator
+import stack
 
 
 def parse_yaml(file_path):
@@ -10,46 +12,46 @@ def parse_yaml(file_path):
         return stream
 
 
-def traverse(output, file):
+def traverse(output, file, root_element, last_element):
     if isinstance(output, list):
         for item in output:
-            traverse(item, file)
+            traverse(item, file, root_element, last_element)
     elif isinstance(output, dict):
         for key, value in output.items():
             if isinstance(value, dict):
                 # element with attrs
-                print("{} with {}".format(key, value))
-                for tag in xml_generator.map_tags(key, []):
-                    file.write(tag)
+                sub_element = ET.SubElement(last_element, key)
+                for attr_name, attr_value in value.items():
+                    sub_element.set(attr_name, attr_value)
             elif isinstance(value, list):
-                # another layout
-                print("root : {}".format(key))
-                for tag in xml_generator.map_tags(key, []):
-                    file.write(tag)
+                # layout element
+                last_element = ET.Element(key)
+                root_element.append(last_element)
 
-            traverse(output[key], file)
+            traverse(output[key], file, root_element, last_element)
+
     elif isinstance(output, str) and output in xml_generator.tagNames:
-        # normal element
-        for tag in xml_generator.map_tags(output, []):
-            file.write(tag)
+        ET.SubElement(last_element, output)
+
+    return root_element
 
 
-def generate_xml(file_path, yaml_output):
-    with open(file_path, "w") as new_file:
-        new_file.write(xml_generator.xml_header)
+def main(source, target):
+    with open(target, "w") as target_file:
+        target_file.write(xml_generator.xml_header)
+
+        yaml_output = parse_yaml(source)
 
         yaml_activity = yaml_output.get('activity')
 
-        traverse(yaml_activity, new_file)
+        root_element = ET.Element(next(iter(yaml_activity)))
 
-    print("\nYour file is ready at {}!".format(file_path))
+        print(yaml_activity)
+        element_stack = stack.Stack()
 
-
-def main(file_path):
-    yaml_output = parse_yaml(file_path)
-
-    generate_xml("newfile.xml", yaml_output)
+        tree = ET.ElementTree(traverse(yaml_activity, target_file, root_element, None))
+        tree.write("trial.xml", pretty_print=True)
 
 
 if __name__ == '__main__':
-    main("stream.yaml")
+    main("stream.yaml", "newfile.xml")

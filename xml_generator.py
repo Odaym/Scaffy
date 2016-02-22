@@ -9,113 +9,120 @@ tagDimensions = {"width_match_parent": "\t\tandroid:layout_width='match_parent'\
                  "height_match_parent": "\t\tandroid:layout_height='match_parent'",
                  "height_wrap_content": "\t\tandroid:layout_height='wrap_content'"}
 
-tagNames = ["relative_layout",
-            "linear_layout", "button",
-            "text_view", "edit_text", "radio_button",
-            "check_box", "image_view", "image_button"]
+tagNames = ["RelativeLayout",
+            "LinearLayout", "Button",
+            "TextView", "EditText", "RadioButton",
+            "CheckBox", "ImageView", "ImageButton"]
 
-attrTags = {"id": "\t\tandroid:id='@+id/{}'\n", "text": "\t\tandroid:text='{}'\n"}
+attrTags = ["id", "text", "orientation", "color"]
 
 orientations = {"orientation_vertical": "\t\tandroid:orientation='vertical'\n",
                 "orientation_horizontal": "\t\tandroid:orientation='horizontal'\n"}
 
 
-def join_attributes(attrs):
-    attrLine = tagDimensions["width_match_parent"] + tagDimensions[
-        "height_match_parent"]
+def map_attributes(attrs):
+    final_attrs = []
 
-    for attr in attrs:
-        attrLine += (attrTags[attr]) if attr in attrTags else print("{} attribute is not supported.")
+    final_attrs.append(tagDimensions["width_match_parent"] + tagDimensions[
+        "height_match_parent"])
 
-    return attrLine
+    if attrs:
+        for key, value in attrs.items():
+            print("KEY IS {}".format(key))
+            # print("key : {} value : {}".format(key, value))
+            if key not in attrTags:
+                print("")
+            else:
+                switcher = {
+                    "id": "\t\tandroid:id=@+id/{}".format(value),
+                    "text": "\t\tandroid:text='{}'".format(value),
+                    "orientation": "\t\tandroid:orientation='{}'".format(value),
+                    "color": "\t\tandroid:color='{}'".format(value)
+                }
+                final_attrs.append(switcher.get(key))
+                # print("attr_line is {}".format(attr_line))
+
+    return "\n".join(final_attrs)
 
 
 def textview_node(attrs):
-    start = '\t<TextView\n{}{}>\n\n'.format(
-        join_attributes(attrs),
+    return '\t<TextView\n{}{}>\n\n'.format(
+        map_attributes(attrs),
         '/')
-
-    return "".join(start)
 
 
 def button_node(attrs):
-    start = '\t<Button\n{}{}>\n\n'.format(
-        join_attributes(attrs),
+    return '\t<Button\n{}{}>\n\n'.format(
+        map_attributes(attrs),
         '/')
-
-    return "".join(start)
 
 
 def imageview_node(attrs):
     start = '\t<ImageView\n{}{}>\n\n'.format(
-        join_attributes(attrs),
+        map_attributes(attrs),
         '/')
 
     return "".join(start)
 
 
 def imagebutton_node(attrs):
-    start = '\t<ImageButton\n{}{}>\n\n'.format(
-        join_attributes(attrs),
+    return '\t<ImageButton\n{}{}>\n\n'.format(
+        map_attributes(attrs),
         '/')
-
-    return "".join(start)
 
 
 def edittext_node(attrs):
-    start = '\t<EditText\n{}{}>\n\n'.format(
-        join_attributes(attrs),
+    return '\t<EditText\n{}{}>\n\n'.format(
+        map_attributes(attrs),
         '/')
-
-    return "".join(start)
 
 
 def radiobutton_node(attrs):
-    start = '\t<RadioButton\n{}{}>\n\n'.format(
-        join_attributes(attrs),
+    return '\t<RadioButton\n{}{}>\n\n'.format(
+        map_attributes(attrs),
         '/')
-
-    return "".join(start)
 
 
 def checkbox_node(attrs):
-    start = '\t<CheckBox\n{}{}>\n\n'.format(
-        join_attributes(attrs),
+    return '\t<CheckBox\n{}{}>\n\n'.format(
+        map_attributes(attrs),
         '/')
-
-    return "".join(start)
 
 
 def linearlayout_node(attrs):
-    start = '<LinearLayout {}{}{}>{}'.format(
+    return '<LinearLayout {}{}{}>{}'.format(
         android_xml_namespace, "\n",
-        join_attributes(attrs), "\n\n")
-
-    return "".join(start)
+        map_attributes(attrs), "\n\n")
 
 
 def relativelayout_node(attrs):
-    start = '<RelativeLayout {}{}{}>{}'.format(
+    return '<RelativeLayout {}{}{}>{}'.format(
         android_xml_namespace, "\n",
-        join_attributes(attrs), "\n\n")
-
-    return "".join(start)
+        map_attributes(attrs), "\n\n")
 
 
-def generate_tag(tag):
+def relativelayout_closing_node():
+    return "</RelativeLayout>{}".format("\n")
+
+
+def linearlayout_closing_node():
+    return "</LinearLayout>{}".format("\n")
+
+
+def map_tags(tag, attrs):
     if tag not in tagNames:
-        print("{} is not supported".format(tag))
+        print("")
     else:
         switcher = {
             "relative_layout": relativelayout_node([]),
             "linear_layout": linearlayout_node([]),
-            "text_view": textview_node([]),
-            "button": button_node([]),
-            "image_button": imagebutton_node([]),
-            "image_view": imageview_node([]),
-            "edit_text": edittext_node([]),
-            "check_box": checkbox_node([]),
-            "radio_button": radiobutton_node([])
+            "text_view": textview_node(attrs),
+            "button": button_node(attrs),
+            "image_button": imagebutton_node(attrs),
+            "image_view": imageview_node(attrs),
+            "edit_text": edittext_node(attrs),
+            "check_box": checkbox_node(attrs),
+            "radio_button": radiobutton_node(attrs)
         }
 
         yield switcher.get(tag)
