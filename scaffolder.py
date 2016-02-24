@@ -53,4 +53,4 @@ def main(source, target):
 
 
 if __name__ == '__main__':
-    main("stream.yaml", "trial.xml")
+    main("/Users/oday/Code/stream.yaml", "trial.xml")
