@@ -9,6 +9,12 @@ tagDimensions = {"layout_width": "wrap_content",
 
 
 def parse_yaml(file_path):
+    """
+    Parse a YAML file
+
+    :param file_path:
+    :return: dict which includes other dicts and lists made up for the parsed YAML elements
+    """
     with open(file_path, "r") as stream:
         stream = yaml_load(stream)
         return stream
@@ -34,13 +40,10 @@ def traverse(node, parent_element):
 
 def main(source, target):
     with open(target, "w") as target_file:
-
         yaml_output = parse_yaml(source)
-
         yaml_activity = yaml_output.get('activity')
 
         top_element = ET.Element(next(iter(yaml_activity)), nsmap=NSMAP)
-
         tree = ET.ElementTree(traverse(yaml_activity, top_element))
 
         for i, tag in enumerate(tree.getiterator()):
